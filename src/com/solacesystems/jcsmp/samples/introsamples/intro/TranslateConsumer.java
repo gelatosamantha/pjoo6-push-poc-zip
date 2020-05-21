@@ -6,8 +6,13 @@ import com.solacesystems.jcsmp.JCSMPFactory;
 import com.solacesystems.jcsmp.SDTException;
 import com.solacesystems.jcsmp.SDTMap;
 import com.solacesystems.jcsmp.TextMessage;
+import com.solacesystems.jcsmp.XMLContentMessage;
 import com.solacesystems.jcsmp.XMLMessageListener;
 import com.solacesystems.jcsmp.XMLMessageProducer;
+// import com.solacesystems.jcsmp.XMLMessage;
+import com.solacesystems.jcsmp.StreamMessage;
+import com.solacesystems.jcsmp.MapMessage;
+
 
 public class TranslateConsumer implements XMLMessageListener {
 	XMLMessageProducer prod;
@@ -25,13 +30,40 @@ public class TranslateConsumer implements XMLMessageListener {
 
 	@Override
 	public void onReceive(BytesXMLMessage arg0) {
-        if (arg0 instanceof BytesMessage) {
+        Class targetClass ;
+        BytesXMLMessage outMsg = null;
+
+
+        if (arg0 instanceof XMLContentMessage) {
+        	targetClass = XMLContentMessage.class;
+        	outMsg = JCSMPFactory.onlyInstance().createMessage(XMLContentMessage.class);
+
             System.out.printf("BytesMessage received: '%s'%n",
-                    ((BytesMessage)arg0).dump());
-        } else {
-            System.out.println("Message received.");
+                    ((XMLContentMessage)arg0).dump()+ " " + arg0.getClass().toString());
+        }else if (arg0 instanceof BytesMessage) {
+        	targetClass = BytesMessage.class;
+        	outMsg = JCSMPFactory.onlyInstance().createMessage(BytesMessage.class);
+
+            // System.out.println("Message received => " + arg0.getClass().toString() +  " == " + arg0.dump());
+        }else if (arg0 instanceof MapMessage) {
+        	targetClass = MapMessage.class;
+        	outMsg = JCSMPFactory.onlyInstance().createMessage(MapMessage.class);        	
+        }else if (arg0 instanceof StreamMessage) {
+        	targetClass = StreamMessage.class;
+        	outMsg = JCSMPFactory.onlyInstance().createMessage(StreamMessage.class);        	
+        }else if (arg0 instanceof TextMessage) {
+        	targetClass = TextMessage.class;
+        	outMsg = JCSMPFactory.onlyInstance().createMessage(TextMessage.class);
+        }else if (arg0 instanceof XMLContentMessage) {
+        	targetClass = XMLContentMessage.class;
+        	outMsg = JCSMPFactory.onlyInstance().createMessage(XMLContentMessage.class);
         }
-        BytesMessage outMsg = JCSMPFactory.onlyInstance().createMessage(BytesMessage.class);
+            System.out.println("Message received => " + arg0.getClass().toString() +  " == " + arg0.dump());
+
+
+
+        // XMLContentMessage outMsg = JCSMPFactory.onlyInstance().createMessage(XMLContentMessage.class);
+        // BytesXMLMessage outMsg = JCSMPFactory.onlyInstance().createMessage(targetClass);
         outMsg.setProperties(arg0.getProperties());
         String empty = "{}";
 		// Translate message and publish
@@ -41,14 +73,19 @@ public class TranslateConsumer implements XMLMessageListener {
 			String topicName = msgMap.get("topicName").toString();
 			// Send out message
 			if (action.equalsIgnoreCase("create")) {
-				outMsg.setData(((BytesMessage)arg0).getData());
+				// outMsg.writeBytes(((XMLContentMessage)arg0).getBytes());
+				((TextMessage)outMsg).setText(((TextMessage)arg0).getText());
+				// outMsg.writeBytes(empty.getBytes());
+            // System.out.println("Out Msg => " + outMsg.getClass().toString() +  " == " + outMsg.dump());
+
 				prod.send(outMsg, JCSMPFactory.onlyInstance().createTopic(topicName));
 			} else if (action.equalsIgnoreCase("update")) {
-				outMsg.setData(((BytesMessage)arg0).getData());
+				// outMsg.writeBytes(((TextMessage)arg0).getBytes());
+				((TextMessage)outMsg).setText(((TextMessage)arg0).getText());
 				prod.send(outMsg, JCSMPFactory.onlyInstance().createTopic(topicName));
 			} else if (action.equalsIgnoreCase("delete")) {
-				
-				outMsg.setData(empty.getBytes());
+				// outMsg.writeBytes(empty.getBytes());
+				((TextMessage)outMsg).setText(empty);
 				prod.send(outMsg, JCSMPFactory.onlyInstance().createTopic(topicName));
 			}
 			arg0.ackMessage();
