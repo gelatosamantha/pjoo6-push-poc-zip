@@ -73,19 +73,19 @@ public class TranslateConsumer implements XMLMessageListener {
 			String topicName = msgMap.get("topicName").toString();
 			// Send out message
 			if (action.equalsIgnoreCase("create")) {
-				// outMsg.writeBytes(((XMLContentMessage)arg0).getBytes());
-				((TextMessage)outMsg).setText(((TextMessage)arg0).getText());
+				outMsg.writeBytes(((XMLContentMessage)arg0).getBytes());
+				// ((TextMessage)outMsg).setText(((TextMessage)arg0).getText());
 				// outMsg.writeBytes(empty.getBytes());
             // System.out.println("Out Msg => " + outMsg.getClass().toString() +  " == " + outMsg.dump());
 
 				prod.send(outMsg, JCSMPFactory.onlyInstance().createTopic(topicName));
 			} else if (action.equalsIgnoreCase("update")) {
-				// outMsg.writeBytes(((TextMessage)arg0).getBytes());
-				((TextMessage)outMsg).setText(((TextMessage)arg0).getText());
+				outMsg.writeBytes(((XMLContentMessage)arg0).getBytes());
+				// ((TextMessage)outMsg).setText(((TextMessage)arg0).getText());
 				prod.send(outMsg, JCSMPFactory.onlyInstance().createTopic(topicName));
 			} else if (action.equalsIgnoreCase("delete")) {
-				// outMsg.writeBytes(empty.getBytes());
-				((TextMessage)outMsg).setText(empty);
+				outMsg.writeBytes(empty.getBytes());
+				// ((TextMessage)outMsg).setText(empty);
 				prod.send(outMsg, JCSMPFactory.onlyInstance().createTopic(topicName));
 			}
 			arg0.ackMessage();
