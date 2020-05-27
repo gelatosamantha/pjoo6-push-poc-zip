@@ -1,4 +1,4 @@
-# pj006-push-poc-adapter
+# pj006-push-poc-zip
 
 Clone the repo.
 
