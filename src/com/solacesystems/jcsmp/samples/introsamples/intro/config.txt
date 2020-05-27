@@ -6,8 +6,12 @@ Password1
 hkjcpoc
 VPN1
 msgvpn-2ko4me0pkv1x
+Topic1
+hkjc/incoming
+Topic2
+hkjc/outgoing
 Queue1
-cap/idafb/push/adapter/que/v1
+test
 HostString2
 tcp://mr22gx8ufrq5gb.messaging.solace.cloud:20064
 Username2
@@ -16,3 +20,5 @@ Password2
 2gm0hhma6e04asa27coorhsvp0
 VPN2
 msgvpn-22gx8ufrtvhl
+SSQueue1
+cap/idafb/push/adapter/que/v1

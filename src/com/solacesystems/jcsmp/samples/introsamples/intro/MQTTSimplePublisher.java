@@ -35,7 +35,7 @@ import com.solacesystems.jcsmp.XMLContentMessage;
 import com.solacesystems.jcsmp.XMLMessage;
 import com.solacesystems.jcsmp.XMLMessageProducer;
 
-public class SimplePublisher {
+public class MQTTSimplePublisher {
     
     public static void main(String... args) throws JCSMPException {
         String currentDirectory = System.getProperty("user.dir");
@@ -46,7 +46,7 @@ public class SimplePublisher {
     	String vpnName = "";
     	String queueName = "";
 
-    	File file = new File(currentDirectory+File.separator+"config.txt");
+    	File file = new File(currentDirectory+File.separator+"bin"+File.separator+"com"+File.separator+"solacesystems"+File.separator+"jcsmp"+File.separator+"samples"+File.separator+"introsamples"+File.separator+"intro"+File.separator+"config.txt");
     	BufferedReader br;
 		try {
 			br = new BufferedReader(new FileReader(file));
@@ -138,74 +138,26 @@ public class SimplePublisher {
         // Publish-only session is now hooked up and running!
         
         //BytesMessage msg = JCSMPFactory.onlyInstance().createMessage(BytesMessage.class);
-        XMLContentMessage txt_msg = JCSMPFactory.onlyInstance().createMessage(XMLContentMessage.class);
+        BytesMessage txt_msg = JCSMPFactory.onlyInstance().createMessage(BytesMessage.class);
         SDTMap userData = JCSMPFactory.onlyInstance().createMap();
-        userData.putString("topicName", "test");
-        userData.putString("action", "create");
-        //msg.setProperties(userData);
-        
-        		
         String text = "{'messge':'Hello world!'}";
         
         Scanner keyboard = new Scanner(System.in);
         String key = "nn";
         while(key.compareToIgnoreCase("e")!=0) {
-        	String topicName = "test";
-        	System.out.println("Choose a action : (c)reate message, (u)pdate topic, (d)elete, (e)xit");
+        	String topicName = "hkjc/incoming";
+        	System.out.println("Choose a action : (c)ompressed message, (e)xit");
         	key = keyboard.nextLine();
 			if (key.equalsIgnoreCase("c")) {
-				System.out.println("Choose a topic to create :");
-				topicName = keyboard.nextLine();
+				// Send 
 	        	System.out.println("Your payload");
 	        	text = keyboard.nextLine();
-	        	//msg.setData(text.getBytes());
 				// Send create topic message
-			    userData.remove("action");
-				userData.remove("topicName");
-				userData.putString("topicName", topicName);
-				userData.putString("action", "create");
-				//msg.setProperties(userData);
-				txt_msg.writeAttachment(text.getBytes());
-				//txt_msg.writeBytes(text.getBytes());
-				txt_msg.setProperties(userData);
-				// Send to Solace
-				//prod.send(msg, queue);
-				prod.send(txt_msg, queue);
-			} else if (key.equalsIgnoreCase("u")) {
-				System.out.println("Choose a topic to update :");
-				topicName = keyboard.nextLine();
-	        	System.out.println("Your payload");
-	        	text = keyboard.nextLine();
-	        	//msg.setData(text.getBytes());
-				// Send update topic message
-			    userData.remove("action");
-				userData.remove("topicName");
-				userData.putString("topicName", topicName);
-				userData.putString("action", "update");
-				//msg.setProperties(userData);
+				//txt_msg.writeAttachment(text.getBytes());
 				txt_msg.writeBytes(text.getBytes());
-				txt_msg.setProperties(userData);
-				// Send to Solace                		
-				//prod.send(msg, queue);
-				prod.send(txt_msg, queue);
-			}else if (key.equalsIgnoreCase("d")) {
-				// Send delete topic message
-				System.out.println("Choose a topic to delete :");
-				topicName = keyboard.nextLine();
-	        	System.out.println("Your payload");
-	        	text = keyboard.nextLine();
-	        	//msg.setData(text.getBytes());
-			    userData.remove("action");
-				userData.remove("topicName");
-				userData.putString("topicName", topicName);
-				userData.putString("action", "delete");
-				//msg.setProperties(userData);
-				txt_msg.writeBytes(text.getBytes());
-				txt_msg.setProperties(userData);
-
 				// Send to Solace
-				//prod.send(msg, queue);
-				prod.send(txt_msg, queue);
+				//prod.send(txt_msg, JCSMPFactory.onlyInstance().createTopic(topicName));
+				prod.send(txt_msg, JCSMPFactory.onlyInstance().createTopic(topicName));
 			}else {
 					// Do nothing
 			}        	

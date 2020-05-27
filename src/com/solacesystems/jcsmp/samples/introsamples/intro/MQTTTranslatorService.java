@@ -36,9 +36,11 @@ import com.solacesystems.jcsmp.JCSMPProperties;
 import com.solacesystems.jcsmp.JCSMPSession;
 import com.solacesystems.jcsmp.JCSMPStreamingPublishEventHandler;
 import com.solacesystems.jcsmp.Queue;
+import com.solacesystems.jcsmp.Topic;
+import com.solacesystems.jcsmp.XMLMessageConsumer;
 import com.solacesystems.jcsmp.XMLMessageProducer;
 
-public class SimpleTranslatorService {
+public class MQTTTranslatorService {
 
     public static void main(String... args) throws JCSMPException {
         String currentDirectory = System.getProperty("user.dir");
@@ -47,7 +49,8 @@ public class SimpleTranslatorService {
     	String userName1 = "";
     	String passwordString1 = "";
     	String vpnName1 = "";
-    	String queueName = "";
+    	String topicName1 = "";
+    	String topicName2 = "";
     	String hostString2 = "";
     	String userName2 = "";
     	String passwordString2 = "";
@@ -83,26 +86,31 @@ public class SimpleTranslatorService {
 	    				total_param++;
 	    				arg = 0;
 	    			case(5):
-	    				// Read queue
-	    				queueName=st;
+	    				// Read topic
+	    				topicName1=st;
 	    				total_param++;
 	    				arg = 0;
 	    			case(6):
+	    				// Read topic
+	    				topicName2=st;
+	    				total_param++;
+	    				arg = 0;	    				
+	    			case(7):
 	    				// Read host
 	    				hostString2 = st;
 	    				total_param++;
 	    				arg = 0;
-	    			case(7):
+	    			case(8):
 	    				// Read username
 	    				userName2 = st;
 	    				total_param++;
 	    				arg = 0;
-	    			case(8):
+	    			case(9):
 	    				// Read passowrd
 	    				passwordString2=st;
 	    				total_param++;
 	    				arg = 0;
-	    			case(9):
+	    			case(10):
 	    				// Read vpn
 	    				vpnName2=st;
 	    				total_param++;
@@ -120,25 +128,28 @@ public class SimpleTranslatorService {
 	    	    	    if (st.equalsIgnoreCase("VPN1")) {
 	    	    	    	arg = 4;
 	    	    	    }
-	    	    	    if (st.equalsIgnoreCase("Queue1")) {
+	    	    	    if (st.equalsIgnoreCase("Topic1")) {
 	    	    	    	arg = 5;
 	    	    	    }
+	    	    	    if (st.equalsIgnoreCase("Topic2")) {
+	    	    	    	arg = 6;
+	    	    	    }
 	    	    		if (st.equalsIgnoreCase("HostString2")) {
-	    	    			arg = 6;
+	    	    			arg = 7;
 	    	    		}
 	    	    	    if (st.equalsIgnoreCase("Username2")) {
-	    	    	    	arg = 7;
-	    	    	    }
-	    	    	    if (st.equalsIgnoreCase("Password2")) {
 	    	    	    	arg = 8;
 	    	    	    }
-	    	    	    if (st.equalsIgnoreCase("VPN2")) {
+	    	    	    if (st.equalsIgnoreCase("Password2")) {
 	    	    	    	arg = 9;
+	    	    	    }
+	    	    	    if (st.equalsIgnoreCase("VPN2")) {
+	    	    	    	arg = 10;
 	    	    	    }
 	    		}
 
 	    	  } 
-	    	if (total_param < 9) {
+	    	if (total_param < 10) {
 	            System.out.println("Not enough information in config file");
 	            System.exit(-1);
 	    	}
@@ -156,7 +167,7 @@ public class SimpleTranslatorService {
         properties_1.setProperty(JCSMPProperties.VPN_NAME, vpnName1); // message-vpn
         properties_1.setProperty(JCSMPProperties.USERNAME, userName1);
         properties_1.setProperty(JCSMPProperties.PASSWORD, passwordString1);
-        final Queue queue = JCSMPFactory.onlyInstance().createQueue(queueName);
+        final Topic topic = JCSMPFactory.onlyInstance().createTopic(topicName1);
         final JCSMPSession session_1 = JCSMPFactory.onlyInstance().createSession(properties_1);
 
         final CountDownLatch latch = new CountDownLatch(1); // used for
@@ -180,19 +191,13 @@ public class SimpleTranslatorService {
             }
         });
         
-        // Create a Flow be able to bind to and consume messages from the Queue.
-        final ConsumerFlowProperties flow_prop = new ConsumerFlowProperties();
-        flow_prop.setEndpoint(queue);
-        // set to "auto acknowledge" where the API will ack back to Solace at the
-        // end of the message received callback
-        flow_prop.setAckMode(JCSMPProperties.SUPPORTED_MESSAGE_ACK_CLIENT);
-        EndpointProperties endpoint_props = new EndpointProperties();
-        endpoint_props.setAccessType(EndpointProperties.ACCESSTYPE_EXCLUSIVE);
-        // bind to the queue, passing null as message listener for no async callback
-        final FlowReceiver cons = session_1.createFlow(new TranslateConsumer(prod), flow_prop, endpoint_props);
+        // Add topic subscription
+        session_1.addSubscription(topic);
         // Start the consumer
+        XMLMessageConsumer xmlCon = session_1.getMessageConsumer(new MQTTTranslateListener(prod, topicName2));
+        xmlCon.start();
         System.out.println("Connected!");
-        cons.start();
+        
         // Consume-only session is now hooked up and running!
 
     	try {
@@ -202,7 +207,7 @@ public class SimpleTranslatorService {
 			e1.printStackTrace();
 		}
         // Close consumer
-        cons.close();
+    	xmlCon.close();
         System.out.println("Exiting.");
         session_1.closeSession();
     }
